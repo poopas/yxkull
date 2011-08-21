@@ -6,6 +6,7 @@ from random import randint
 from beam import Beam
 from pos import pos
 from drone import Drone
+from collision import line_circle_intersect
 
 class Engine(object):
     def __init__(self, size):
@@ -13,10 +14,18 @@ class Engine(object):
         self.beams = []
         self.entities = []
         self.size = size
+        self.points = 0 
+        self.game_over = False
 
         self.playersprites = pygame.sprite.RenderPlain()
         self.entitysprites = pygame.sprite.RenderPlain() 
 
+
+    def lose_point(self):
+        self.points -= 1
+        if self.points <= 0:
+            # Game over
+            self.game_over = True
 
     def add_player(self, player):
         self.players.append(player)
@@ -31,27 +40,28 @@ class Engine(object):
         self.entitysprites.remove(entity)
 
     def process(self):
-        self.spawn()
+        if not self.game_over:
+            self.spawn()
 
-        # Entities
-        deletes = []
-        for p in self.entities:
-            p.process()
-            if p.die:
-                deletes.append(p) 
+            # Entities
+            deletes = []
+            for p in self.entities:
+                p.process()
+                if p.die:
+                    deletes.append(p) 
 
-        for d in deletes:
-            self.remove_entity(d)
-            
-
-
-        # Players
-        for p in self.players:
-            p.process()
-    
-        self.process_beams()
+            for d in deletes:
+                self.remove_entity(d)
+                
 
 
+            # Players
+            for p in self.players:
+                p.process()
+        
+            self.process_beams()
+
+        
         # Update sprites
         self.playersprites.update()
         self.entitysprites.update() 
@@ -69,23 +79,37 @@ class Engine(object):
                     self.beams.append(beam)
 
         # Make the beams take damage!
-        if 0:
-            for beam in self.beams:
-                length = beam.length() 
-                for t in arange(0, length, 3.0):
-                    pos = beam.pos1 + (beam.pos2 - beam.pos1) * length
-                    for ent in self.entities:
-                        if ent.dist_to(pos) <= ent.radius:
-                            beam.make_damage(ent)
+        for beam in self.beams:
+            length = beam.length() 
+
+            for entity in self.entities:
+                if line_circle_intersect(beam.pos1, beam.pos2, entity.pos, entity.radius):
+                    beam.make_damage(entity)
 
     def spawn(self):
-        if randint(0, 20) == 0:
+        if randint(0, 50) == 0:
             drone = Drone(self)
         
-            drone.pos = pos(randint(0, self.size[0]), -drone.radius-2)
+            drone.pos = pos(randint(20, self.size[0]-20*2), -drone.radius-2)
             self.add_entity(drone)
 
 
     def draw(self, screen):
         self.entitysprites.draw(screen)
         self.playersprites.draw(screen)
+
+    def reset(self):
+
+        buf = 0.0
+        # Reset player positions
+        #positions = [pos(buf, buf), pos(self.size[0]-buf, buf), pos(self.size[0]-buf, self.size[1]-buf), pos(buf, self.size[1]-buf)]
+        positions = [pos(self.size[0]*(i+1)/(1.0 + len(self.players)), self.size[1]-80) for i in xrange(len(self.players))] 
+        for i, p in enumerate(self.players):
+            p.pos = positions[i]
+            p.velocity = pos(0, 0)
+        
+        self.entities = []
+        self.entitysprites = pygame.sprite.RenderPlain() 
+    
+        self.game_over = False
+        self.points = 5

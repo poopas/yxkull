@@ -23,20 +23,25 @@ def load_image(name, colorkey=None):
 class Entity(pygame.sprite.Sprite):
     def __init__(self, engine):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image('drone.bmp', -1)
-        screen = pygame.display.get_surface()
-        self.area = screen.get_rect()
+        self.load_sprite()
 
-        self.image = pygame.transform.scale(self.image, (48, 48))
+        #self.image = pygame.transform.scale(self.image, (48, 48))
+        self.radius = self.rect.size[0]/2.0
 
         self.engine = engine
         self._pos = pos(0, 0)
         self.color = (0, 0, 0)
-        self.radius = 3
         self.die = False
         self.life = 100
         self.sprite = pygame.sprite.Sprite
 
+    def sprite_name(self):
+        return 'drone.bmp'
+
+    def load_sprite(self):
+        self.image, self.rect = load_image(self.sprite_name(), -1)
+        screen = pygame.display.get_surface()
+        self.area = screen.get_rect()
 
     def getpos(self):
         return self._pos

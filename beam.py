@@ -14,4 +14,4 @@ class Beam(object):
         return numpy.linalg.norm(self.pos1 - self.pos2)
 
     def make_damage(self, entity):
-        entity.damage(self.damage)
+        entity.damage(self.damage + 10000)
