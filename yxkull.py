@@ -20,6 +20,7 @@ from pygame.locals import *
 # Project
 from pos import pos
 from player import Player
+from engine import Engine
 
 if not pygame.font: print 'Warning, fonts disabled'
 if not pygame.mixer: print 'Warning, sound disabled'
@@ -42,8 +43,6 @@ def main():
     JOYSTICKS = 2
     joysticks = [pygame.joystick.Joystick(i) for i in xrange(JOYSTICKS)]  
 
-    players = []
-
     for i, j in enumerate(joysticks):
         j.init()
         print j.get_numaxes()
@@ -58,15 +57,16 @@ def main():
 
     #print axes
 
+    engine = Engine((WIDTH, HEIGHT))
+
     colors = [(100, 0, 0), (0, 100, 0), (0, 0, 100), (100, 0, 100)]
     buf = 80.0
     positions = [pos(buf, buf), pos(WIDTH-buf, buf), pos(WIDTH-buf, HEIGHT-buf), pos(buf, HEIGHT-buf)]
     
-    players = []
     for p in xrange(PLAYERS):
-        player = Player(colors[p], axes[p])
+        player = Player(engine, colors[p], axes[p])
         player.pos = positions[p]
-        players.append(player)
+        engine.add_player(player)
 
     #players += [Player(j, (0, 100*(1-i), 100*i))]
 
@@ -91,24 +91,25 @@ def main():
 
         for j in xrange(JOYSTICKS):
             for i in xrange(2):
-                p = players[j*2+i]
+                p = engine.players[j*2+i]
                 p.apply_control(joysticks[j].get_axis(i*3), joysticks[j].get_axis(i*3+1))
     
     
-        for p in players:
-            p.process()
+        engine.process()
 
-        if 0:
-            for p1 in players:
-                for p2 in players:
-                    if p1.dist_to(p2) < 60.0:
-                        pygame.draw.line(
-    
         # Draw
         screen.blit(background, (0, 0))
 
-        for p in players:
-            pygame.draw.circle(screen, p.color, p.pos, p.radius) 
+        for beam in engine.beams:
+            pygame.draw.line(screen, beam.color, beam.pos1, beam.pos2, beam.width)
+
+        #for p in engine.entities:
+            #pygame.draw.circle(screen, p.color, p.pos, p.radius) 
+
+        #for p in engine.players:
+        #    pygame.draw.circle(screen, p.color, p.pos, p.radius) 
+
+        engine.draw(screen)
 
         pygame.display.flip()
 
