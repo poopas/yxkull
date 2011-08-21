@@ -29,7 +29,7 @@ if not pygame.mixer: print 'Warning, sound disabled'
 def main():
     #Initialize Everything
     pygame.init()
-    WIDTH, HEIGHT = 1024, 768 
+    WIDTH, HEIGHT = 1024, 720 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption('Yxkull')
     pygame.mouse.set_visible(0)
